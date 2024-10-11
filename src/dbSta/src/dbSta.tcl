@@ -34,7 +34,6 @@
 ############################################################################
 
 namespace eval sta {
-
 define_cmd_args "highlight_path" {[-min|-max] pin ^|r|rise|v|f|fall}
 
 proc highlight_path { args } {
@@ -45,11 +44,11 @@ proc highlight_path { args } {
     sta_error "No design block found."
   }
 
-  if {[info exists flags(-min)] && [info exists flags(-max)]} {
+  if { [info exists flags(-min)] && [info exists flags(-max)] } {
     sta_error "-min and -max cannot both be specified."
-  } elseif {[info exists flags(-min)]} {
+  } elseif { [info exists flags(-min)] } {
     set min_max "min"
-  } elseif {[info exists flags(-max)]} {
+  } elseif { [info exists flags(-max)] } {
     set min_max "max"
   } else {
     # Default to max path.
@@ -80,13 +79,16 @@ proc highlight_path { args } {
   }
 }
 
-define_cmd_args "report_cell_usage" {}
+define_cmd_args "report_cell_usage" {[-verbose]}
 
-proc report_cell_usage {} {
+proc report_cell_usage { args } {
+  parse_key_args "highlight_path" args keys {} \
+    flags {-verbose} 0
+
   if { [ord::get_db_block] == "NULL" } {
     sta_error "No design block found."
   }
-  report_cell_usage_cmd
+  report_cell_usage_cmd [info exists flags(-verbose)]
 }
 
 # redefine sta::sta_warn/error to call utl::warn/error

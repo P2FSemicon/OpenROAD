@@ -74,16 +74,8 @@ using odb::Rect;
 
 using utl::Logger;
 
-struct pinSetComp
-{
-  bool operator()(const odb::dbBTerm* lhs, const odb::dbBTerm* rhs) const
-  {
-    return lhs->getId() < rhs->getId();
-  }
-};
-
 // A list of pins that will be placed together in the die boundary
-using PinSet = std::set<odb::dbBTerm*, pinSetComp>;
+using PinSet = std::set<odb::dbBTerm*>;
 using PinList = std::vector<odb::dbBTerm*>;
 using MirroredPins = std::unordered_map<odb::dbBTerm*, odb::dbBTerm*>;
 
@@ -164,7 +156,8 @@ class IOPlacer
                 int y,
                 int width,
                 int height,
-                bool force_to_die_bound);
+                bool force_to_die_bound,
+                bool placed_status);
 
   static Direction getDirection(const std::string& direction);
   static Edge getEdge(const std::string& edge);
@@ -185,7 +178,7 @@ class IOPlacer
   void setAnnealingDebugPaintInterval(int iters_between_paintings);
   void setAnnealingDebugNoPauseMode(bool no_pause_mode);
 
-  void writePinPlacement(const char* file_name);
+  void writePinPlacement(const char* file_name, bool placed);
 
  private:
   void createTopLayerPinPattern();

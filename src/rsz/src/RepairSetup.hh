@@ -70,7 +70,9 @@ using sta::Net;
 using sta::PathExpanded;
 using sta::PathRef;
 using sta::Pin;
+using sta::RiseFall;
 using sta::Slack;
+using sta::Slew;
 using sta::StaState;
 using sta::TimingArc;
 using sta::Vertex;
@@ -85,8 +87,8 @@ struct SlackEstimatorParams
   Pin* prev_driver_pin;
   Pin* driver_input_pin;
   Instance* driver;
-  PathRef* driver_path;
-  PathRef* prev_driver_path;
+  const PathRef* driver_path;
+  const PathRef* prev_driver_path;
   LibertyCell* driver_cell;
   const float setup_slack_margin;
   const Corner* corner;
@@ -164,22 +166,34 @@ class RepairSetup : public sta::dbStaState
   void equivCellPins(const LibertyCell* cell,
                      LibertyPort* input_port,
                      sta::LibertyPortSet& ports);
-  bool swapPins(PathRef* drvr_path, int drvr_index, PathExpanded* expanded);
-  bool removeDrvr(PathRef* drvr_path,
+  bool swapPins(const PathRef* drvr_path,
+                int drvr_index,
+                PathExpanded* expanded);
+  bool removeDrvr(const PathRef* drvr_path,
                   LibertyCell* drvr_cell,
                   int drvr_index,
                   PathExpanded* expanded,
                   float setup_slack_margin);
   bool estimatedSlackOK(const SlackEstimatorParams& params);
-  bool upsizeDrvr(PathRef* drvr_path, int drvr_index, PathExpanded* expanded);
+  bool estimateInputSlewImpact(Instance* instance,
+                               const DcalcAnalysisPt* dcalc_ap,
+                               Slew old_in_slew[RiseFall::index_count],
+                               Slew new_in_slew[RiseFall::index_count],
+                               // delay adjustment from prev stage
+                               float delay_adjust,
+                               SlackEstimatorParams params,
+                               bool accept_if_slack_improves);
+  bool upsizeDrvr(const PathRef* drvr_path,
+                  int drvr_index,
+                  PathExpanded* expanded);
   Point computeCloneGateLocation(
       const Pin* drvr_pin,
       const vector<pair<Vertex*, Slack>>& fanout_slacks);
-  bool cloneDriver(PathRef* drvr_path,
+  bool cloneDriver(const PathRef* drvr_path,
                    int drvr_index,
                    Slack drvr_slack,
                    PathExpanded* expanded);
-  void splitLoads(PathRef* drvr_path,
+  void splitLoads(const PathRef* drvr_path,
                   int drvr_index,
                   Slack drvr_slack,
                   PathExpanded* expanded);
@@ -202,14 +216,18 @@ class RepairSetup : public sta::dbStaState
   Slack slackPenalized(const BufferedNetPtr& bnet);
   Slack slackPenalized(const BufferedNetPtr& bnet, int index);
 
-  void printProgress(int iteration, bool force, bool end) const;
+  void printProgress(int iteration,
+                     bool force,
+                     bool end,
+                     bool last_gasp,
+                     int num_viols) const;
   bool terminateProgress(int iteration,
                          float initial_tns,
                          float& prev_tns,
                          float& fix_rate_threshold,
                          int endpt_index,
                          int num_endpts);
-  void repairSetupLastGasp(const OptoParams& params);
+  void repairSetupLastGasp(const OptoParams& params, int& num_viols);
 
   Logger* logger_ = nullptr;
   dbNetwork* db_network_ = nullptr;

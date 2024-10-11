@@ -39,18 +39,19 @@ sta::define_cmd_args "initialize_floorplan" {[-utilization util]\
 					       [-die_area {lx ly ux uy}]\
 					       [-core_area {lx ly ux uy}]\
 					       [-additional_sites site_names]\
-					       [-site site_name]}
+					       [-site site_name]\
+					       [-row_parity NONE|ODD|EVEN]}
 
 proc initialize_floorplan { args } {
   sta::parse_key_args "initialize_floorplan" args \
     keys {-utilization -aspect_ratio -core_space \
-	    -die_area -core_area -site -additional_sites} \
+	    -die_area -core_area -site -additional_sites -row_parity} \
     flags {}
 
   sta::check_argc_eq0 "initialize_floorplan" $args
 
   set site ""
-  if {[info exists keys(-site)]} {
+  if { [info exists keys(-site)] } {
     set site [ifp::find_site $keys(-site)]
   } else {
     utl::warn IFP 11 "use -site to add placement rows."
@@ -63,18 +64,26 @@ proc initialize_floorplan { args } {
     }
   }
 
+  set row_parity "NONE"
+  if { [info exists keys(-row_parity)] } {
+    set row_parity $keys(-row_parity)
+    if { $row_parity != "NONE" && $row_parity != "ODD" && $row_parity != "EVEN" } {
+      utl::error IFP 12 "-row_parity must be NONE, ODD or EVEN"
+    }
+  }
+
   sta::check_argc_eq0 "initialize_floorplan" $args
-  if {[info exists keys(-utilization)]} {
+  if { [info exists keys(-utilization)] } {
     set util $keys(-utilization)
-    if {[info exists keys(-core_space)]} {
+    if { [info exists keys(-core_space)] } {
       set core_sp $keys(-core_space)
-      if { [llength $core_sp] == 1} {
+      if { [llength $core_sp] == 1 } {
         sta::check_positive_float "-core_space" $core_sp
         set core_sp_bottom $core_sp
         set core_sp_top $core_sp
         set core_sp_left $core_sp
         set core_sp_right $core_sp
-      } elseif { [llength $core_sp] == 4} {
+      } elseif { [llength $core_sp] == 4 } {
         lassign $core_sp core_sp_bottom core_sp_top core_sp_left core_sp_right
         sta::check_positive_float "-core_space" $core_sp_bottom
         sta::check_positive_float "-core_space" $core_sp_top
@@ -89,7 +98,7 @@ proc initialize_floorplan { args } {
       set core_sp_left 0.0
       set core_sp_right 0.0
     }
-    if {[info exists keys(-aspect_ratio)]} {
+    if { [info exists keys(-aspect_ratio)] } {
       set aspect_ratio $keys(-aspect_ratio)
       sta::check_positive_float "-aspect_ratio" $aspect_ratio
     } else {
@@ -101,8 +110,9 @@ proc initialize_floorplan { args } {
       [ord::microns_to_dbu $core_sp_left] \
       [ord::microns_to_dbu $core_sp_right] \
       $site \
-      $additional_sites
-  } elseif {[info exists keys(-die_area)]} {
+      $additional_sites \
+      $row_parity
+  } elseif { [info exists keys(-die_area)] } {
     set die_area $keys(-die_area)
     if { [llength $die_area] != 4 } {
       utl::error IFP 15 "-die_area is a list of 4 coordinates."
@@ -114,7 +124,7 @@ proc initialize_floorplan { args } {
     sta::check_positive_float "-die_area" $die_uy
 
     ord::ensure_linked
-    if {[info exists keys(-core_area)]} {
+    if { [info exists keys(-core_area)] } {
       set core_area $keys(-core_area)
       if { [llength $core_area] != 4 } {
         utl::error IFP 16 "-core_area is a list of 4 coordinates."
@@ -132,7 +142,8 @@ proc initialize_floorplan { args } {
         [ord::microns_to_dbu $core_lx] [ord::microns_to_dbu $core_ly] \
         [ord::microns_to_dbu $core_ux] [ord::microns_to_dbu $core_uy] \
         $site \
-        $additional_sites
+        $additional_sites \
+        $row_parity
     } else {
       utl::error IFP 17 "no -core_area specified."
     }
@@ -215,7 +226,7 @@ proc insert_tiecells { args } {
   sta::check_argc_eq1 "insert_tiecells" $args
 
   set prefix "TIEOFF_"
-  if {[info exists keys(-prefix)] } {
+  if { [info exists keys(-prefix)] } {
     set prefix $keys(-prefix)
   }
 
@@ -243,7 +254,6 @@ proc insert_tiecells { args } {
 }
 
 namespace eval ifp {
-
 proc microns_to_mfg_grid { microns } {
   set tech [ord::get_db_tech]
   if { [$tech hasManufacturingGrid] } {
@@ -254,5 +264,4 @@ proc microns_to_mfg_grid { microns } {
     return [ord::microns_to_dbu $microns]
   }
 }
-
 }

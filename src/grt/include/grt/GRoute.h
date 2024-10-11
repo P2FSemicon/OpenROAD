@@ -40,13 +40,11 @@
 #include <set>
 #include <vector>
 
-namespace odb {
-class dbNet;
-}  // namespace odb
+#include "odb/db.h"
 
 namespace grt {
 
-typedef std::vector<std::vector<std::vector<int>>> CapacitiesVec;
+using CapacitiesVec = std::vector<std::vector<std::vector<int>>>;
 
 struct GSegment
 {
@@ -59,7 +57,7 @@ struct GSegment
   GSegment() = default;
   GSegment(int x0, int y0, int l0, int x1, int y1, int l1);
   bool isVia() const { return (init_x == final_x && init_y == final_y); }
-  int length()
+  int length() const
   {
     return std::abs(init_x - final_x) + std::abs(init_y - final_y);
   }
@@ -91,11 +89,6 @@ class Capacities
   CapacitiesVec ver_capacities_;
 };
 
-struct cmpById
-{
-  bool operator()(odb::dbNet* net1, odb::dbNet* net2) const;
-};
-
 struct TileCongestion
 {
   int capacity;
@@ -104,7 +97,7 @@ struct TileCongestion
 
 struct TileInformation
 {
-  std::set<odb::dbNet*, cmpById> nets;
+  std::set<odb::dbNet*> nets;
   TileCongestion congestion;
 };
 
@@ -114,7 +107,7 @@ struct CongestionInformation
 {
   GSegment segment;
   TileCongestion congestion;
-  std::set<odb::dbNet*, cmpById> sources;
+  std::set<odb::dbNet*> sources;
 };
 
 struct CapacityReduction
@@ -125,9 +118,11 @@ struct CapacityReduction
 
 using CapacityReductionData = std::vector<std::vector<CapacityReduction>>;
 
+using SegmentIndex = uint16_t;
+
 // class Route is defined in fastroute core.
-typedef std::vector<GSegment> GRoute;
-typedef std::map<odb::dbNet*, GRoute, cmpById> NetRouteMap;
+using GRoute = std::vector<GSegment>;
+using NetRouteMap = std::map<odb::dbNet*, GRoute>;
 void print(GRoute& groute);
 
 }  // namespace grt

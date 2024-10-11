@@ -63,6 +63,7 @@ enum dbObjectType
 
   // Design Objects
   dbChipObj,
+  dbGdsLibObj,
   dbBlockObj,
   dbInstHdrObj,
   dbInstObj,
@@ -87,8 +88,16 @@ enum dbObjectType
   dbBPinObj,
   // Generator Code Begin DbObjectType
   dbAccessPointObj,
+  dbBusPortObj,
   dbDftObj,
   dbGCellGridObj,
+  dbGDSBoundaryObj,
+  dbGDSBoxObj,
+  dbGDSNodeObj,
+  dbGDSPathObj,
+  dbGDSSRefObj,
+  dbGDSStructureObj,
+  dbGDSTextObj,
   dbGlobalConnectObj,
   dbGroupObj,
   dbGuideObj,
@@ -102,6 +111,7 @@ enum dbObjectType
   dbModNetObj,
   dbModuleObj,
   dbNetTrackObj,
+  dbPolygonObj,
   dbPowerDomainObj,
   dbPowerSwitchObj,
   dbScanChainObj,
@@ -122,6 +132,7 @@ enum dbObjectType
   dbTechLayerEolKeepOutRuleObj,
   dbTechLayerForbiddenSpacingRuleObj,
   dbTechLayerKeepOutZoneRuleObj,
+  dbTechLayerMaxSpacingRuleObj,
   dbTechLayerMinCutRuleObj,
   dbTechLayerMinStepRuleObj,
   dbTechLayerSpacingEolRuleObj,
@@ -133,6 +144,7 @@ enum dbObjectType
 
   // Lib Objects
   dbLibObj,
+  dbGDSLibObj,
   dbSiteObj,
   dbMasterObj,
   dbMPinObj,

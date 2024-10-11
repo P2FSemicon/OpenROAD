@@ -46,6 +46,7 @@
 
 #include "sta/Clock.hh"
 #include "sta/MinMax.hh"
+#include "sta/PortDirection.hh"
 #include "sta/Units.hh"
 #endif
 
@@ -168,6 +169,7 @@ void ChartsWidget::updatePathGroupMenuIndexes()
 {
   if (filters_menu_->count() != 0) {
     filters_menu_->clear();
+    path_group_name_.clear();
   }
 
   filters_menu_->addItem("No Path Group");  // Index 0
@@ -299,7 +301,12 @@ void ChartsWidget::removeUnconstrainedPinsAndSetLimits(StaPins& end_points)
 
       ++pin_iter;
     } else {
-      unconstrained_count++;
+      auto network = sta_->getDbNetwork();
+      // Don't count dangling outputs (eg clk loads)
+      if (!network->direction(*pin_iter)->isOutput()
+          || network->net(*pin_iter)) {
+        unconstrained_count++;
+      }
       pin_iter = end_points.erase(pin_iter);
     }
   }
@@ -422,7 +429,7 @@ void ChartsWidget::emitEndPointsInBucket(const int bar_index)
     ++pin_count;
   }
 
-  emit endPointsToReport(report_pins);
+  emit endPointsToReport(report_pins, path_group_name_);
 }
 
 void ChartsWidget::setBucketInterval()
@@ -651,10 +658,11 @@ void ChartsWidget::changePathGroupFilter()
   const int filter_index = filters_menu_->currentIndex();
 
   if (filter_index > 0) {
-    std::string path_group = filter_index_to_path_group_name_.at(filter_index);
-    end_point_to_slack = stagui_->getEndPointToSlackMap(path_group);
+    path_group_name_ = filter_index_to_path_group_name_.at(filter_index);
+    end_point_to_slack = stagui_->getEndPointToSlackMap(path_group_name_);
     setLimits(end_point_to_slack);
   } else {
+    path_group_name_.clear();
     end_points = stagui_->getEndPoints();
     removeUnconstrainedPinsAndSetLimits(end_points);
   }
